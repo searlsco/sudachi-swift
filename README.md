@@ -1,6 +1,8 @@
 # sudachi-swift
 
-[![CI](https://github.com/iasnezhkov/sudachi-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/iasnezhkov/sudachi-swift/actions/workflows/ci.yml)
+> searlsco fork of [iasnezhkov/sudachi-swift](https://github.com/iasnezhkov/sudachi-swift): the Rust core is built with LTO off so the shipped staticlib carries no embedded LLVM bitcode, which crashes Xcode previews' JIT in consuming apps.
+
+[![CI](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](Package.swift)
 [![Platforms: iOS 17+ | macOS 14+](https://img.shields.io/badge/Platforms-iOS_17%2B_|_macOS_14%2B-lightgrey)](Package.swift)
@@ -21,11 +23,11 @@ gives Sudachi to Python, this package gives it to Swift.
 ## Installation
 
 In Xcode: **File → Add Package Dependencies…** and enter
-`https://github.com/iasnezhkov/sudachi-swift`. Or in your `Package.swift`:
+`https://github.com/searlsco/sudachi-swift`. Or in your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/iasnezhkov/sudachi-swift", from: "0.1.0")
+    .package(url: "https://github.com/searlsco/sudachi-swift", from: "0.1.0")
 ]
 ```
 
@@ -184,7 +186,7 @@ rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin
 
 # 2. Clone (no submodules — the pinned sudachi.rs sources are fetched on demand
 #    by the scripts below, into third_party/sudachi.rs)
-git clone https://github.com/iasnezhkov/sudachi-swift.git
+git clone https://github.com/searlsco/sudachi-swift.git
 cd sudachi-swift
 
 # 3. Dictionary (for tests) + build
