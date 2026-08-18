@@ -83,6 +83,26 @@ strip_slice aarch64-apple-ios      "lib${LIB_NAME}-ios.a"
 strip_slice aarch64-apple-ios-sim  "lib${LIB_NAME}-sim.a"
 strip_slice aarch64-apple-darwin   "lib${LIB_NAME}-macos.a"
 
+# Tripwire: no slice may carry embedded LLVM bitcode (__LLVM segments), and
+# each must expose the uniffi constructor as a native symbol. Xcode's previews
+# JIT statically links its own LLVM and crashes parsing bitcode produced by
+# Rust's newer LLVM, so a bitcode-laden release would break every consumer's
+# SwiftUI previews. Requires `lto = false` in the release profile.
+echo "==> Verifying slices are bitcode-free"
+for slice in "$SLICES_DIR"/*.a; do
+  if otool -l "$slice" | grep "segname __LLVM" > /dev/null; then
+    echo "error: $slice contains embedded LLVM bitcode (__LLVM segment)." >&2
+    echo "       Check [profile.release] in Cargo.toml: lto must stay off." >&2
+    exit 1
+  fi
+  # No `grep -q` here: under pipefail its early exit SIGPIPEs nm and fails
+  # the pipeline even on a match. Plain grep consumes the whole stream.
+  if ! nm "$slice" 2>/dev/null | grep "_uniffi_${LIB_NAME}_fn_constructor_sudachidictionary_new" > /dev/null; then
+    echo "error: $slice is missing the uniffi FFI symbols (or nm failed to parse it)." >&2
+    exit 1
+  fi
+done
+
 echo "==> Building xcframework (ios device + ios sim + macOS, all arm64)"
 XCF="$BUILD/Sudachi.xcframework"
 rm -rf "$XCF"

@@ -18,8 +18,8 @@ let package = Package(
     targets: [
         .binaryTarget(
             name: "sudachi_swiftFFI",
-            url: "https://github.com/iasnezhkov/sudachi-swift/releases/download/v0.1.1/Sudachi.xcframework.zip",
-            checksum: "5f17105e7ec602413fc8c72e6a44d273758b36fa8da17edc3f6b0cc43983984e"
+            url: "https://github.com/searlsco/sudachi-swift/releases/download/v0.2.0/Sudachi.xcframework.zip",
+            checksum: "8cc04a1b21f74a728904b579eb9728837181ad365fb500d940cd026a94d20491"
         ),
         .target(
             name: "Sudachi",

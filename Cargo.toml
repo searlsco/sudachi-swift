@@ -4,15 +4,19 @@ members = ["crates/sudachi-swift-uniffi"]
 exclude = ["third_party"]
 
 [workspace.package]
-version = "0.1.1"
+version = "0.2.0"
 edition = "2021"
 description = "Swift bindings for the Sudachi Japanese morphological analyzer (sudachi.rs) via UniFFI"
 authors = ["Ilia Snezhkov <iasnezhkov@gmail.com>"]
 license = "Apache-2.0"
-repository = "https://github.com/iasnezhkov/sudachi-swift"
+repository = "https://github.com/searlsco/sudachi-swift"
 
 [profile.release]
 opt-level = 3
-lto = "thin"
+# LTO stays off: it embeds LLVM bitcode in the staticlib objects, and Xcode's
+# previews JIT (XOJIT, which statically links its own older LLVM) crashes
+# parsing bitcode from Rust's newer LLVM. build-ios.sh enforces this with a
+# __LLVM-section tripwire on every built slice.
+lto = false
 codegen-units = 1
 strip = true

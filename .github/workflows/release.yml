@@ -24,12 +24,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          # Push the version-bump commit + tag over SSH using a repo deploy key.
-          # That key is on the main ruleset's bypass list, so the push lands on
-          # protected main without granting humans a bypass. Store the private
-          # key as the RELEASE_DEPLOY_KEY secret; add its public half as a
-          # write-enabled deploy key.
-          ssh-key: ${{ secrets.RELEASE_DEPLOY_KEY }}
 
       # sudachi.rs is an on-demand checkout pinned by third_party/sudachi.rs.pin,
       # not a submodule (see scripts/fetch-sudachi-rs.sh). build-ios.sh fetches it
@@ -69,8 +63,10 @@ jobs:
           VERSION: ${{ inputs.version }}
           CHECKSUM: ${{ steps.checksum.outputs.value }}
         run: |
+          # Repo-agnostic: point the whole download URL at this repository so a
+          # fork's releases reference the fork, not the original upstream.
           sed -i '' -E \
-            "s#/releases/download/v[0-9][^/]*/#/releases/download/v${VERSION}/#" \
+            "s#url: \"https://github.com/[^/]+/[^/]+/releases/download/v[0-9][^/]*/#url: \"https://github.com/${{ github.repository }}/releases/download/v${VERSION}/#" \
             Package.swift
           sed -i '' -E \
             "s#checksum: \"[a-f0-9]{64}\"#checksum: \"${CHECKSUM}\"#" \
@@ -81,7 +77,7 @@ jobs:
 
           # Verify every rewrite landed — fail loudly rather than tag a
           # release whose manifest still points at the previous version.
-          grep -q "/releases/download/v${VERSION}/" Package.swift
+          grep -q "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/" Package.swift
           grep -q "checksum: \"${CHECKSUM}\"" Package.swift
           grep -q "^version = \"${VERSION}\"" Cargo.toml
           echo "--- Package.swift ---"; grep -E 'url:|checksum:' Package.swift
@@ -90,8 +86,8 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          git config user.name  "Ilia Snezhkov"
-          git config user.email "iasnezhkov@gmail.com"
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add Package.swift Cargo.toml Cargo.lock
           git commit -m "Release v${VERSION}"
           git tag "v${VERSION}"
