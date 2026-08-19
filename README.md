@@ -1,6 +1,6 @@
 # sudachi-swift
 
-> searlsco fork of [iasnezhkov/sudachi-swift](https://github.com/iasnezhkov/sudachi-swift): the Rust core is built with LTO off so the shipped staticlib carries no embedded LLVM bitcode, which crashes Xcode previews' JIT in consuming apps.
+> searlsco fork of [iasnezhkov/sudachi-swift](https://github.com/iasnezhkov/sudachi-swift): the Rust core ships as a dynamic framework (Xcode previews' JIT cannot link static archives) built with LTO off so it carries no embedded LLVM bitcode, which crashes that same JIT.
 
 [![CI](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)

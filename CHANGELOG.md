@@ -4,6 +4,24 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-08-19
+
+### Changed
+- **The xcframework now ships dynamic frameworks instead of static archives.**
+  Xcode 27's previews JIT (XOJIT) cannot materialize symbols out of static
+  archive members, so any `#Preview` whose compiled object references the FFI
+  symbols failed with `JITError: Runtime linking failure / Symbols not found`.
+  XOJIT loads dylibs fine, so each slice is now a `sudachi_swiftFFI.framework`
+  wrapping the Rust cdylib. Xcode embeds and signs it in consuming apps
+  automatically.
+- Host `swift test` runs against the dynamic framework need a one-line bridge:
+  Swift Build copies the framework into `Products/Debug` but only rpaths
+  `Products/Debug/PackageFrameworks`, so consumers must symlink
+  `PackageFrameworks/sudachi_swiftFFI.framework -> ../sudachi_swiftFFI.framework`
+  inside their build directory before testing (see `scripts/coverage.sh`).
+- `scripts/build-ios.sh` prefers the rustup-managed toolchain over a Homebrew
+  `rust` that shadows it on PATH (the Homebrew rustc has no iOS targets).
+
 ## [0.1.1] - 2026-07-27
 
 ### Changed

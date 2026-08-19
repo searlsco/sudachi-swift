@@ -33,6 +33,13 @@ cargo llvm-cov --package sudachi-swift-uniffi --tests \
 echo ""
 echo "==> Swift coverage (gate: 100% lines on Sudachi+Extensions.swift)"
 cd swift/Sudachi
+# Swift Build copies the binary-target framework into Products/Debug but only
+# adds an rpath for Products/Debug/PackageFrameworks, so `swift test` can't
+# dlopen the dynamic framework without this bridge. Safe to create before the
+# build: the symlink dangles until Swift Build copies the framework.
+mkdir -p .build/out/Products/Debug/PackageFrameworks
+ln -sfn ../sudachi_swiftFFI.framework \
+  .build/out/Products/Debug/PackageFrameworks/sudachi_swiftFFI.framework
 swift test --enable-code-coverage
 COV_JSON="$(swift test --show-codecov-path)"
 python3 - "$COV_JSON" <<'PY'

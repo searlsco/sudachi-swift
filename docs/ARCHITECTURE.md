@@ -18,7 +18,7 @@ Swift app
    │  import Sudachi
    ▼
 swift/Sudachi/…/Sudachi.swift   ← UniFFI-generated Swift (do not edit)
-   │  C FFI (Sudachi.xcframework, a static lib)
+   │  C FFI (Sudachi.xcframework, a dynamic framework)
    ▼
 crates/sudachi-swift-uniffi/src/lib.rs   ← OUR wrapper (one small file)
    │  Rust API
