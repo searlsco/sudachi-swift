@@ -41,7 +41,7 @@ jobs:
       - name: Add Apple Rust targets
         run: |
           rustup target add aarch64-apple-ios aarch64-apple-ios-sim \
-            aarch64-apple-darwin
+            aarch64-apple-darwin aarch64-apple-ios-macabi
 
       - name: Build xcframework
         run: scripts/build-ios.sh

@@ -34,15 +34,16 @@ mkdir -p "$BUILD"
 # (see scripts/fetch-sudachi-rs.sh). No-op once it is present at the pin.
 "$ROOT/scripts/fetch-sudachi-rs.sh"
 
-# Apple Silicon only: arm64 device, arm64 simulator, arm64 macOS. The x86_64
-# (Intel) simulator/macOS slices are intentionally dropped — it roughly halves
-# the artifact, and Intel Macs can build from source if ever needed.
+# Apple Silicon only: arm64 device, arm64 simulator, arm64 macOS, arm64 Mac
+# Catalyst. The x86_64 (Intel) slices are intentionally dropped — it roughly
+# halves the artifact, and Intel Macs can build from source if ever needed.
 echo "==> Building Rust dylibs for Apple targets (arm64)"
 cd "$ROOT"
 TARGETS=(
   aarch64-apple-ios
   aarch64-apple-ios-sim
   aarch64-apple-darwin
+  aarch64-apple-ios-macabi
 )
 for target in "${TARGETS[@]}"; do
   echo "    [$target]"
@@ -94,8 +95,9 @@ EOF
 write_info_plist() {  # <plist-path> <platform>
   local min_key min_value platform="$2"
   case "$platform" in
-    macosx) min_key="LSMinimumSystemVersion"; min_value="14.0" ;;
-    *)      min_key="MinimumOSVersion";       min_value="17.0" ;;
+    # Mac Catalyst frameworks are macOS-family bundles.
+    macosx | maccatalyst) min_key="LSMinimumSystemVersion"; min_value="14.0" ;;
+    *)                    min_key="MinimumOSVersion";       min_value="17.0" ;;
   esac
   cat > "$1" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -118,9 +120,9 @@ EOF
 
 supported_platform_name() {
   case "$1" in
-    iphoneos)        echo "iPhoneOS" ;;
-    iphonesimulator) echo "iPhoneSimulator" ;;
-    macosx)          echo "MacOSX" ;;
+    iphoneos)             echo "iPhoneOS" ;;
+    iphonesimulator)      echo "iPhoneSimulator" ;;
+    macosx | maccatalyst) echo "MacOSX" ;;
   esac
 }
 
@@ -129,8 +131,9 @@ build_framework() {  # <target-triple> <slice-dir-name> <platform>
   local src="$ROOT/target/$triple/release/lib${LIB_NAME}.dylib"
   local fw="$FRAMEWORKS_DIR/$slice/${FW_NAME}.framework"
   local binary headers modules plist
-  if [ "$platform" = "macosx" ]; then
-    # macOS frameworks are versioned bundles; flat layouts fail codesign.
+  if [ "$platform" = "macosx" ] || [ "$platform" = "maccatalyst" ]; then
+    # macOS-family frameworks (Catalyst included) are versioned bundles;
+    # flat layouts fail codesign.
     mkdir -p "$fw/Versions/A/Headers" "$fw/Versions/A/Modules" "$fw/Versions/A/Resources"
     binary="$fw/Versions/A/${FW_NAME}"
     headers="$fw/Versions/A/Headers"
@@ -161,15 +164,16 @@ build_framework() {  # <target-triple> <slice-dir-name> <platform>
 }
 
 echo "==> Assembling dynamic frameworks"
-build_framework aarch64-apple-ios     ios   iphoneos
-build_framework aarch64-apple-ios-sim sim   iphonesimulator
-build_framework aarch64-apple-darwin  macos macosx
+build_framework aarch64-apple-ios        ios      iphoneos
+build_framework aarch64-apple-ios-sim    sim      iphonesimulator
+build_framework aarch64-apple-darwin     macos    macosx
+build_framework aarch64-apple-ios-macabi catalyst maccatalyst
 
 # Tripwire: no binary may carry embedded LLVM bitcode (__LLVM segments), each
 # must expose the uniffi constructor as a native symbol, and each must be a
 # dylib (never a static archive — XOJIT can't materialize archive members).
 echo "==> Verifying framework binaries (dylib, bitcode-free, FFI symbols)"
-for triple_slice in "ios" "sim" "macos"; do
+for triple_slice in "ios" "sim" "macos" "catalyst"; do
   fw="$FRAMEWORKS_DIR/$triple_slice/${FW_NAME}.framework"
   bin="$fw/${FW_NAME}"
   if ! file "$(readlink -f "$bin")" | grep "dynamically linked shared library" > /dev/null; then
@@ -189,13 +193,14 @@ for triple_slice in "ios" "sim" "macos"; do
   fi
 done
 
-echo "==> Building xcframework (ios device + ios sim + macOS, all arm64)"
+echo "==> Building xcframework (ios device + ios sim + macOS + Mac Catalyst, all arm64)"
 XCF="$BUILD/Sudachi.xcframework"
 rm -rf "$XCF"
 xcodebuild -create-xcframework \
   -framework "$FRAMEWORKS_DIR/ios/${FW_NAME}.framework" \
   -framework "$FRAMEWORKS_DIR/sim/${FW_NAME}.framework" \
   -framework "$FRAMEWORKS_DIR/macos/${FW_NAME}.framework" \
+  -framework "$FRAMEWORKS_DIR/catalyst/${FW_NAME}.framework" \
   -output "$XCF"
 
 echo ""
