@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2] - 2026-08-29
+
+### Added
+- **Per-slice `.dSYM`s in the xcframework**, so crash reports from consuming
+  apps symbolicate the Rust core. The release profile now emits
+  line-tables-only debug info, `build-ios.sh` lifts a `.dSYM` with `dsymutil`
+  before stripping each framework binary, and `-create-xcframework` gets a
+  `-debug-symbols` for every slice. Previously every consuming app's TestFlight
+  upload warned `Upload Symbols Failed ... did not include a dSYM for the
+  sudachi_swiftFFI.framework`, and Rust frames arrived unsymbolicated. The
+  shipped framework binaries are byte-for-byte as stripped as before (2.2 MB,
+  155 symbols); only the artifact grows, from a 4 MB to a 14 MB zip. A new
+  tripwire fails the build if a slice's dSYM is missing or its UUID does not
+  match the binary that ships.
+
 ## [0.3.1] - 2026-08-25
 
 ### Added

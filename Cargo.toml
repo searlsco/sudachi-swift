@@ -19,4 +19,11 @@ opt-level = 3
 # __LLVM-section tripwire on every built slice.
 lto = false
 codegen-units = 1
-strip = true
+# Debug info stays in the intermediate dylib so build-ios.sh can lift a .dSYM
+# out of it before stripping the copy it packages into the framework. The
+# shipped binary is unchanged; only the xcframework gains symbols, without
+# which crash reports from the Rust core cannot be symbolicated at all.
+# Line tables only: enough for function/file/line frames at a third the size
+# of full DWARF.
+debug = "line-tables-only"
+strip = false

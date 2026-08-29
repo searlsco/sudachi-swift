@@ -2,7 +2,7 @@
 # Build Sudachi.xcframework from the Rust workspace (Apple Silicon only).
 #
 # Outputs:
-#   build/Sudachi.xcframework  — binary target for SPM
+#   build/Sudachi.xcframework  — binary target for SPM (carries per-slice dSYMs)
 #   build/generated/sudachi_swiftFFI.{h,modulemap}  — C header + modulemap
 #   swift/Sudachi/Sources/Sudachi/Sudachi.swift — Swift bindings
 #
@@ -156,6 +156,11 @@ build_framework() {  # <target-triple> <slice-dir-name> <platform>
   cp "$src" "$binary"
   chmod +w "$binary"
   install_name_tool -id "$install_name_tool_id" "$binary"
+  # Lift the .dSYM before stripping, and after install_name_tool so it is
+  # keyed to the UUID of the binary that actually ships. Without it the
+  # xcframework carries no symbols, every consuming app's TestFlight upload
+  # warns "Upload Symbols Failed", and Rust frames never symbolicate.
+  dsymutil "$binary" -o "$fw.dSYM"
   strip -S -x "$binary"
   cp "$HEADERS_DIR/${LIB_NAME}FFI.h" "$headers/${FW_NAME}.h"
   write_framework_modulemap "$modules"
@@ -172,7 +177,7 @@ build_framework aarch64-apple-ios-macabi catalyst maccatalyst
 # Tripwire: no binary may carry embedded LLVM bitcode (__LLVM segments), each
 # must expose the uniffi constructor as a native symbol, and each must be a
 # dylib (never a static archive — XOJIT can't materialize archive members).
-echo "==> Verifying framework binaries (dylib, bitcode-free, FFI symbols)"
+echo "==> Verifying framework binaries (dylib, bitcode-free, FFI symbols, dSYM)"
 for triple_slice in "ios" "sim" "macos" "catalyst"; do
   fw="$FRAMEWORKS_DIR/$triple_slice/${FW_NAME}.framework"
   bin="$fw/${FW_NAME}"
@@ -191,16 +196,35 @@ for triple_slice in "ios" "sim" "macos" "catalyst"; do
     echo "error: $bin is missing the uniffi FFI symbols (or nm failed to parse it)." >&2
     exit 1
   fi
+  dsym="$fw.dSYM"
+  if [ ! -d "$dsym" ]; then
+    echo "error: $dsym is missing; dsymutil produced no debug symbols." >&2
+    echo "       Check [profile.release] in Cargo.toml: debug must stay on" >&2
+    echo "       and strip off, or there is no DWARF for dsymutil to lift." >&2
+    exit 1
+  fi
+  if [ "$(dwarfdump --uuid "$bin" | awk '{print $2}')" \
+     != "$(dwarfdump --uuid "$dsym" | awk '{print $2}')" ]; then
+    echo "error: $dsym does not match the UUID of $bin." >&2
+    exit 1
+  fi
 done
 
 echo "==> Building xcframework (ios device + ios sim + macOS + Mac Catalyst, all arm64)"
 XCF="$BUILD/Sudachi.xcframework"
 rm -rf "$XCF"
+# Each -debug-symbols binds to the -framework preceding it, and the paths must
+# be absolute. This is what puts a dSYM in each slice so Xcode can hand one to
+# consuming apps' archives.
 xcodebuild -create-xcframework \
   -framework "$FRAMEWORKS_DIR/ios/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/ios/${FW_NAME}.framework.dSYM" \
   -framework "$FRAMEWORKS_DIR/sim/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/sim/${FW_NAME}.framework.dSYM" \
   -framework "$FRAMEWORKS_DIR/macos/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/macos/${FW_NAME}.framework.dSYM" \
   -framework "$FRAMEWORKS_DIR/catalyst/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/catalyst/${FW_NAME}.framework.dSYM" \
   -output "$XCF"
 
 echo ""
