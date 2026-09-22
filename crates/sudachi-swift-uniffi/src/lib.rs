@@ -10,6 +10,11 @@
 //! crate lives in the UniFFI-generated scaffolding (`#[unsafe(no_mangle)]`
 //! exports), which precludes a crate-level `#![deny(unsafe_code)]`.
 
+// UniFFI's generated scaffolding defines its UDL metadata as a large `const`
+// array, which newer clippy (1.98+) rejects under `-D warnings`. The lint cannot
+// be scoped to the `include_scaffolding!` expansion, so it is allowed here.
+#![allow(clippy::large_const_arrays)]
+
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
