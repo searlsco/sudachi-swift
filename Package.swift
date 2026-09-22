@@ -1,11 +1,10 @@
 // swift-tools-version: 6.0
 import PackageDescription
 
-// NOTE: `url` + `checksum` below are rewritten automatically by the release
-// workflow (.github/workflows/release.yml) on each tagged release — the
-// all-zero checksum below is a pre-first-release placeholder. Between releases
-// they may lag; local development/tests use swift/Sudachi/Package.swift,
-// which links the locally built build/Sudachi.xcframework instead.
+// NOTE: `url` + `checksum` below are rewritten by the release workflow
+// (.github/workflows/release.yml) on each release. Local development and tests
+// use swift/Sudachi/Package.swift, which links the locally built
+// build/Sudachi.xcframework instead.
 let package = Package(
     name: "sudachi-swift",
     platforms: [

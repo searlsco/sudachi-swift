@@ -182,7 +182,8 @@ source):
 # 1. Rust toolchain + Apple targets
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 source "$HOME/.cargo/env"
-rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin
+rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin \
+  aarch64-apple-ios-macabi
 
 # 2. Clone (no submodules — the pinned sudachi.rs sources are fetched on demand
 #    by the scripts below, into third_party/sudachi.rs)
@@ -246,5 +247,4 @@ or endorsed by Works Applications.
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how it fits together and
   what is intentionally custom on top of sudachi.rs.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) — build, test, and API-change workflow.
-- [`CHANGELOG.md`](CHANGELOG.md) · [`SECURITY.md`](SECURITY.md) ·
-  [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md)
+- [`CHANGELOG.md`](CHANGELOG.md)

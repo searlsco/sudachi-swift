@@ -19,17 +19,18 @@ one of three layers:
   ```bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
-  rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin
+  rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin \
+    aarch64-apple-ios-macabi
   ```
 
   The xcframework is **Apple Silicon only** (arm64 device, arm64 simulator,
-  arm64 macOS) — the x86_64/Intel slices are intentionally dropped to roughly
+  arm64 macOS, arm64 Mac Catalyst) — the x86_64/Intel slices are intentionally dropped to roughly
   halve the artifact.
 
 ## Local setup
 
 ```bash
-git clone https://github.com/iasnezhkov/sudachi-swift.git
+git clone https://github.com/searlsco/sudachi-swift.git
 cd sudachi-swift
 scripts/fetch-sudachi-rs.sh                 # pinned sudachi.rs sources (shallow)
 scripts/fetch-dictionary.sh core            # ~70 MB download, needed by tests

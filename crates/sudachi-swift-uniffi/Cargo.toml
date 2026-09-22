@@ -9,7 +9,7 @@ repository.workspace = true
 publish = false
 
 [lib]
-crate-type = ["lib", "staticlib", "cdylib"]
+crate-type = ["lib", "cdylib"]
 name = "sudachi_swift"
 
 [dependencies]

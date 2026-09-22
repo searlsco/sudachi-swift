@@ -13,7 +13,7 @@ repository = "https://github.com/searlsco/sudachi-swift"
 
 [profile.release]
 opt-level = 3
-# LTO stays off: it embeds LLVM bitcode in the staticlib objects, and Xcode's
+# LTO stays off: it would embed LLVM bitcode in the built objects, and Xcode's
 # previews JIT (XOJIT, which statically links its own older LLVM) crashes
 # parsing bitcode from Rust's newer LLVM. build-ios.sh enforces this with a
 # __LLVM-section tripwire on every built slice.

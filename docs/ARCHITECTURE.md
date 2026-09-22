@@ -73,8 +73,8 @@ several tokenizers rather than relying on a single one.
 
 ## Build & distribution (summary)
 
-- `scripts/build-ios.sh` cross-compiles the wrapper for three Apple targets —
-  all arm64: iOS device, iOS simulator, macOS (x86_64/Intel slices are
+- `scripts/build-ios.sh` cross-compiles the wrapper for four Apple targets —
+  all arm64: iOS device, iOS simulator, macOS, Mac Catalyst (x86_64/Intel slices are
   intentionally dropped; they'd roughly double the artifact, and Intel Macs can
   build from source) — runs `uniffi-bindgen`, strips the slices, and assembles
   `build/Sudachi.xcframework`.

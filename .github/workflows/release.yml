@@ -38,13 +38,36 @@ jobs:
             exit 1
           fi
 
-      - name: Add Apple Rust targets
+      - name: Add Apple Rust targets + llvm-tools
         run: |
           rustup target add aarch64-apple-ios aarch64-apple-ios-sim \
             aarch64-apple-darwin aarch64-apple-ios-macabi
+          rustup component add llvm-tools-preview
 
       - name: Build xcframework
         run: scripts/build-ios.sh
+
+      # Same coverage gates as CI, so a failing test stops the release before
+      # anything is committed, tagged, or published. The tests need the core
+      # dictionary (pinned to CI's version so both share one cache entry).
+      - name: Cache SudachiDict (core, 20260723)
+        id: dict-cache
+        uses: actions/cache@v6
+        with:
+          path: dictionaries
+          key: sudachidict-core-20260723
+
+      - name: Fetch dictionary
+        if: steps.dict-cache.outputs.cache-hit != 'true'
+        run: scripts/fetch-dictionary.sh core 20260723
+
+      - name: Install cargo-llvm-cov
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Coverage gates
+        run: scripts/coverage.sh
 
       - name: Archive xcframework
         run: |

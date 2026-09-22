@@ -1,8 +1,0 @@
-blank_issues_enabled: true
-contact_links:
-  - name: sudachi.rs (upstream Rust core)
-    url: https://github.com/WorksApplications/sudachi.rs/issues
-    about: Report tokenization/analysis or dictionary-format issues upstream.
-  - name: SudachiDict (dictionary data)
-    url: https://github.com/WorksApplications/SudachiDict/issues
-    about: Report issues with dictionary entries, readings, or POS here.
