@@ -4,6 +4,19 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2026-09-22
+
+### Changed
+- The Rust crate no longer builds an unused `staticlib`; the xcframework has
+  shipped the dynamic framework since 0.3.0, so the artifact is unchanged.
+- The Release workflow now runs the same coverage gates as CI (core dictionary
+  plus `scripts/coverage.sh`) before anything is committed or tagged, and CI
+  builds the Mac Catalyst target.
+
+### Removed
+- Upstream's community files (SECURITY.md, CODE_OF_CONDUCT.md, issue and PR
+  templates, dependabot config), which routed reports to the upstream author.
+
 ## [0.3.2] - 2026-08-29
 
 ### Added
