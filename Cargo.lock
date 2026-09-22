@@ -703,7 +703,7 @@ dependencies = [
 
 [[package]]
 name = "sudachi-swift-uniffi"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "parking_lot",
  "sudachi",
