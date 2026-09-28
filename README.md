@@ -15,7 +15,7 @@ Tokenization runs **on-device**: no server round-trip, no fork of sudachi.rs.
 The same way [SudachiPy](https://github.com/WorksApplications/sudachi.rs/tree/develop/python)
 gives Sudachi to Python, this package gives it to Swift.
 
-- **Targets:** iOS / iPadOS 17+, macOS 14+ (Apple Silicon; see
+- **Targets:** iOS / iPadOS 17+, macOS 14+, tvOS 17+ (Apple Silicon; see
   [Building from source](#building-from-source) for Intel).
 - **Distribution:** Swift Package Manager, with the Rust core shipped as a
   prebuilt binary `.xcframework`.
@@ -184,6 +184,8 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 source "$HOME/.cargo/env"
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin \
   aarch64-apple-ios-macabi
+# (the tvOS slices are tier-3 Rust targets; build-ios.sh installs the nightly
+#  pinned as TVOS_NIGHTLY, with rust-src, and builds them with -Zbuild-std)
 
 # 2. Clone (no submodules — the pinned sudachi.rs sources are fetched on demand
 #    by the scripts below, into third_party/sudachi.rs)

@@ -6,8 +6,9 @@
 #   build/generated/sudachi_swiftFFI.{h,modulemap}  — C header + modulemap
 #   swift/Sudachi/Sources/Sudachi/Sudachi.swift — Swift bindings
 #
-# Requires: rustup with the Apple targets below installed; Xcode CLT. The
-# pinned sudachi.rs sources are fetched automatically if missing.
+# Requires: rustup with the stable Apple targets below installed; Xcode CLT.
+# The tvOS slices build on the pinned TVOS_NIGHTLY, installed on first run.
+# The pinned sudachi.rs sources are fetched automatically if missing.
 
 set -euo pipefail
 
@@ -35,8 +36,9 @@ mkdir -p "$BUILD"
 "$ROOT/scripts/fetch-sudachi-rs.sh"
 
 # Apple Silicon only: arm64 device, arm64 simulator, arm64 macOS, arm64 Mac
-# Catalyst. The x86_64 (Intel) slices are intentionally dropped — it roughly
-# halves the artifact, and Intel Macs can build from source if ever needed.
+# Catalyst, arm64 tvOS device, arm64 tvOS simulator. The x86_64 (Intel)
+# slices are intentionally dropped — it roughly halves the artifact, and
+# Intel Macs can build from source if ever needed.
 echo "==> Building Rust dylibs for Apple targets (arm64)"
 cd "$ROOT"
 TARGETS=(
@@ -48,6 +50,28 @@ TARGETS=(
 for target in "${TARGETS[@]}"; do
   echo "    [$target]"
   cargo build -p sudachi-swift-uniffi --release --target "$target"
+done
+
+# tvOS is a tier-3 Rust target with no prebuilt std, so its slices build std
+# from source (-Zbuild-std, which needs rust-src) on a nightly pinned by date
+# so a rebuild reproduces the same toolchain. Its bin directory goes first
+# on PATH for these builds, like the stable one above: `cargo +toolchain`
+# and `rustup run` both still reach the stable rustc already on PATH.
+TVOS_NIGHTLY="nightly-2026-09-25"
+TVOS_TARGETS=(
+  aarch64-apple-tvos
+  aarch64-apple-tvos-sim
+)
+if ! rustup toolchain list | grep "^${TVOS_NIGHTLY}-" > /dev/null; then
+  rustup toolchain install "$TVOS_NIGHTLY" --profile minimal --component rust-src
+fi
+TVOS_BIN="$(dirname "$(rustup which --toolchain "$TVOS_NIGHTLY" rustc)")"
+# tvOS 17 floor, matching the iOS 17 MinimumOSVersion in the framework plists.
+export TVOS_DEPLOYMENT_TARGET=17.0
+for target in "${TVOS_TARGETS[@]}"; do
+  echo "    [$target] ($TVOS_NIGHTLY, build-std)"
+  PATH="$TVOS_BIN:$PATH" cargo build -p sudachi-swift-uniffi --release \
+    --target "$target" -Zbuild-std=std,panic_abort
 done
 
 echo "==> Generating Swift bindings"
@@ -122,6 +146,8 @@ supported_platform_name() {
   case "$1" in
     iphoneos)             echo "iPhoneOS" ;;
     iphonesimulator)      echo "iPhoneSimulator" ;;
+    appletvos)            echo "AppleTVOS" ;;
+    appletvsimulator)     echo "AppleTVSimulator" ;;
     macosx | maccatalyst) echo "MacOSX" ;;
   esac
 }
@@ -173,12 +199,14 @@ build_framework aarch64-apple-ios        ios      iphoneos
 build_framework aarch64-apple-ios-sim    sim      iphonesimulator
 build_framework aarch64-apple-darwin     macos    macosx
 build_framework aarch64-apple-ios-macabi catalyst maccatalyst
+build_framework aarch64-apple-tvos       tvos     appletvos
+build_framework aarch64-apple-tvos-sim   tvos-sim appletvsimulator
 
 # Tripwire: no binary may carry embedded LLVM bitcode (__LLVM segments), each
 # must expose the uniffi constructor as a native symbol, and each must be a
 # dylib (never a static archive — XOJIT can't materialize archive members).
 echo "==> Verifying framework binaries (dylib, bitcode-free, FFI symbols, dSYM)"
-for triple_slice in "ios" "sim" "macos" "catalyst"; do
+for triple_slice in "ios" "sim" "macos" "catalyst" "tvos" "tvos-sim"; do
   fw="$FRAMEWORKS_DIR/$triple_slice/${FW_NAME}.framework"
   bin="$fw/${FW_NAME}"
   if ! file "$(readlink -f "$bin")" | grep "dynamically linked shared library" > /dev/null; then
@@ -210,7 +238,7 @@ for triple_slice in "ios" "sim" "macos" "catalyst"; do
   fi
 done
 
-echo "==> Building xcframework (ios device + ios sim + macOS + Mac Catalyst, all arm64)"
+echo "==> Building xcframework (ios device + ios sim + macOS + Mac Catalyst + tvOS device + tvOS sim, all arm64)"
 XCF="$BUILD/Sudachi.xcframework"
 rm -rf "$XCF"
 # Each -debug-symbols binds to the -framework preceding it, and the paths must
@@ -225,6 +253,10 @@ xcodebuild -create-xcframework \
   -debug-symbols "$FRAMEWORKS_DIR/macos/${FW_NAME}.framework.dSYM" \
   -framework "$FRAMEWORKS_DIR/catalyst/${FW_NAME}.framework" \
   -debug-symbols "$FRAMEWORKS_DIR/catalyst/${FW_NAME}.framework.dSYM" \
+  -framework "$FRAMEWORKS_DIR/tvos/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/tvos/${FW_NAME}.framework.dSYM" \
+  -framework "$FRAMEWORKS_DIR/tvos-sim/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/tvos-sim/${FW_NAME}.framework.dSYM" \
   -output "$XCF"
 
 echo ""

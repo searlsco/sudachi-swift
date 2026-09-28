@@ -24,8 +24,12 @@ one of three layers:
   ```
 
   The xcframework is **Apple Silicon only** (arm64 device, arm64 simulator,
-  arm64 macOS, arm64 Mac Catalyst) — the x86_64/Intel slices are intentionally dropped to roughly
-  halve the artifact.
+  arm64 macOS, arm64 Mac Catalyst, arm64 tvOS device, arm64 tvOS simulator) —
+  the x86_64/Intel slices are intentionally dropped to roughly halve the
+  artifact. tvOS is a tier-3 Rust target with no prebuilt std, so
+  `scripts/build-ios.sh` builds those two slices with `-Zbuild-std` on the
+  nightly pinned as `TVOS_NIGHTLY`, installing it (with `rust-src`) if
+  missing.
 
 ## Local setup
 

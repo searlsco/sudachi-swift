@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **tvOS slices** (`tvos-arm64`, `tvos-arm64-simulator`) in the xcframework,
+  with a tvOS 17 floor. tvOS is a tier-3 Rust target, so
+  `scripts/build-ios.sh` builds them with `-Zbuild-std` on a date-pinned
+  nightly (`TVOS_NIGHTLY`); the other slices still build on stable.
+
 ## [0.3.3] - 2026-09-22
 
 ### Changed
