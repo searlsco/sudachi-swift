@@ -17,7 +17,7 @@ struct SudachiTests {
         let morphemes = try tok.tokenize(text: "今日は良い天気ですね。")
 
         #expect(!morphemes.isEmpty)
-        let surfaces = morphemes.map { $0.surface }.joined()
+        let surfaces = morphemes.map(\.surface).joined()
         #expect(surfaces == "今日は良い天気ですね。")
     }
 
@@ -28,11 +28,11 @@ struct SudachiTests {
         let dict = try DictFixture.makeDictionary()
 
         let tokC = try SudachiTokenizer(dictionary: dict, mode: .c)
-        let surfacesC = try tokC.tokenize(text: "国家公務員").map { $0.surface }
+        let surfacesC = try tokC.tokenize(text: "国家公務員").map(\.surface)
         #expect(surfacesC == ["国家公務員"])
 
         let tokA = try SudachiTokenizer(dictionary: dict, mode: .a)
-        let surfacesA = try tokA.tokenize(text: "国家公務員").map { $0.surface }
+        let surfacesA = try tokA.tokenize(text: "国家公務員").map(\.surface)
         #expect(surfacesA.count >= 2)
     }
 
