@@ -5,7 +5,7 @@
 [![CI](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](Package.swift)
-[![Platforms: iOS 17+ | macOS 14+](https://img.shields.io/badge/Platforms-iOS_17%2B_|_macOS_14%2B-lightgrey)](Package.swift)
+[![Platforms: iOS 17+ | visionOS 1+ | macOS 14+](https://img.shields.io/badge/Platforms-iOS_17%2B_|_visionOS_1%2B_|_macOS_14%2B-lightgrey)](Package.swift)
 
 Swift bindings for [Sudachi](https://github.com/WorksApplications/sudachi.rs) —
 the Japanese morphological analyzer from Works Applications — generated via
@@ -15,7 +15,7 @@ Tokenization runs **on-device**: no server round-trip, no fork of sudachi.rs.
 The same way [SudachiPy](https://github.com/WorksApplications/sudachi.rs/tree/develop/python)
 gives Sudachi to Python, this package gives it to Swift.
 
-- **Targets:** iOS / iPadOS 17+, macOS 14+, tvOS 17+ (Apple Silicon; see
+- **Targets:** iOS / iPadOS 17+, visionOS 1+, macOS 14+, tvOS 17+ (Apple Silicon; see
   [Building from source](#building-from-source) for Intel).
 - **Distribution:** Swift Package Manager, with the Rust core shipped as a
   prebuilt binary `.xcframework`.

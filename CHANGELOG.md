@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project aims
 to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-11-07
+
+### Added
+- **visionOS slices** (`visionos-arm64`, `visionos-arm64-simulator`) in the
+  xcframework, with a visionOS 1.0 deployment floor and Mach-O platform checks.
+
 ## [0.4.0] - 2026-09-28
 
 ### Added

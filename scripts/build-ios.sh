@@ -36,9 +36,9 @@ mkdir -p "$BUILD"
 "$ROOT/scripts/fetch-sudachi-rs.sh"
 
 # Apple Silicon only: arm64 device, arm64 simulator, arm64 macOS, arm64 Mac
-# Catalyst, arm64 tvOS device, arm64 tvOS simulator. The x86_64 (Intel)
-# slices are intentionally dropped — it roughly halves the artifact, and
-# Intel Macs can build from source if ever needed.
+# Catalyst, arm64 tvOS device and simulator, arm64 visionOS device and
+# simulator. The x86_64 (Intel) slices are intentionally dropped — it roughly
+# halves the artifact, and Intel Macs can build from source if ever needed.
 echo "==> Building Rust dylibs for Apple targets (arm64)"
 cd "$ROOT"
 TARGETS=(
@@ -46,10 +46,16 @@ TARGETS=(
   aarch64-apple-ios-sim
   aarch64-apple-darwin
   aarch64-apple-ios-macabi
+  aarch64-apple-visionos
+  aarch64-apple-visionos-sim
 )
 for target in "${TARGETS[@]}"; do
   echo "    [$target]"
-  cargo build -p sudachi-swift-uniffi --release --target "$target"
+  if [[ "$target" == aarch64-apple-visionos* ]]; then
+    XROS_DEPLOYMENT_TARGET=1.0 cargo build -p sudachi-swift-uniffi --release --target "$target"
+  else
+    cargo build -p sudachi-swift-uniffi --release --target "$target"
+  fi
 done
 
 # tvOS is a tier-3 Rust target with no prebuilt std, so its slices build std
@@ -121,6 +127,7 @@ write_info_plist() {  # <plist-path> <platform>
   case "$platform" in
     # Mac Catalyst frameworks are macOS-family bundles.
     macosx | maccatalyst) min_key="LSMinimumSystemVersion"; min_value="14.0" ;;
+    xros | xrsimulator)   min_key="MinimumOSVersion";       min_value="1.0" ;;
     *)                    min_key="MinimumOSVersion";       min_value="17.0" ;;
   esac
   cat > "$1" <<EOF
@@ -148,6 +155,8 @@ supported_platform_name() {
     iphonesimulator)      echo "iPhoneSimulator" ;;
     appletvos)            echo "AppleTVOS" ;;
     appletvsimulator)     echo "AppleTVSimulator" ;;
+    xros)                 echo "XROS" ;;
+    xrsimulator)          echo "XRSimulator" ;;
     macosx | maccatalyst) echo "MacOSX" ;;
   esac
 }
@@ -201,14 +210,28 @@ build_framework aarch64-apple-darwin     macos    macosx
 build_framework aarch64-apple-ios-macabi catalyst maccatalyst
 build_framework aarch64-apple-tvos       tvos     appletvos
 build_framework aarch64-apple-tvos-sim   tvos-sim appletvsimulator
+build_framework aarch64-apple-visionos   visionos xros
+build_framework aarch64-apple-visionos-sim visionos-sim xrsimulator
 
 # Tripwire: no binary may carry embedded LLVM bitcode (__LLVM segments), each
 # must expose the uniffi constructor as a native symbol, and each must be a
 # dylib (never a static archive — XOJIT can't materialize archive members).
 echo "==> Verifying framework binaries (dylib, bitcode-free, FFI symbols, dSYM)"
-for triple_slice in "ios" "sim" "macos" "catalyst" "tvos" "tvos-sim"; do
+for triple_slice in "ios" "sim" "macos" "catalyst" "tvos" "tvos-sim" "visionos" "visionos-sim"; do
   fw="$FRAMEWORKS_DIR/$triple_slice/${FW_NAME}.framework"
   bin="$fw/${FW_NAME}"
+  case "$triple_slice" in
+    visionos)     expected_platform=11 ;;
+    visionos-sim) expected_platform=12 ;;
+    *)            expected_platform="" ;;
+  esac
+  if [ -n "$expected_platform" ]; then
+    actual_platform="$(otool -l "$bin" | awk '/cmd LC_BUILD_VERSION/ {in_build_version=1; next} in_build_version && /platform/ {print $2; exit}')"
+    if [ "$actual_platform" != "$expected_platform" ]; then
+      echo "error: $bin has Mach-O platform ${actual_platform:-unknown}, expected $expected_platform." >&2
+      exit 1
+    fi
+  fi
   if ! file "$(readlink -f "$bin")" | grep "dynamically linked shared library" > /dev/null; then
     echo "error: $bin is not a dylib." >&2
     exit 1
@@ -238,7 +261,7 @@ for triple_slice in "ios" "sim" "macos" "catalyst" "tvos" "tvos-sim"; do
   fi
 done
 
-echo "==> Building xcframework (ios device + ios sim + macOS + Mac Catalyst + tvOS device + tvOS sim, all arm64)"
+echo "==> Building xcframework (iOS, macOS, Catalyst, tvOS, visionOS device and simulator slices, all arm64)"
 XCF="$BUILD/Sudachi.xcframework"
 rm -rf "$XCF"
 # Each -debug-symbols binds to the -framework preceding it, and the paths must
@@ -257,7 +280,31 @@ xcodebuild -create-xcframework \
   -debug-symbols "$FRAMEWORKS_DIR/tvos/${FW_NAME}.framework.dSYM" \
   -framework "$FRAMEWORKS_DIR/tvos-sim/${FW_NAME}.framework" \
   -debug-symbols "$FRAMEWORKS_DIR/tvos-sim/${FW_NAME}.framework.dSYM" \
+  -framework "$FRAMEWORKS_DIR/visionos/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/visionos/${FW_NAME}.framework.dSYM" \
+  -framework "$FRAMEWORKS_DIR/visionos-sim/${FW_NAME}.framework" \
+  -debug-symbols "$FRAMEWORKS_DIR/visionos-sim/${FW_NAME}.framework.dSYM" \
   -output "$XCF"
+
+echo "==> Verifying visionOS XCFramework platform entries"
+/usr/bin/python3 - "$XCF/Info.plist" <<'PY'
+import plistlib
+import sys
+
+with open(sys.argv[1], "rb") as package_info:
+    libraries = plistlib.load(package_info)["AvailableLibraries"]
+
+assert any(
+    item.get("SupportedPlatform") == "xros"
+    and "SupportedPlatformVariant" not in item
+    for item in libraries
+), "XCFramework is missing the visionOS device slice"
+assert any(
+    item.get("SupportedPlatform") == "xros"
+    and item.get("SupportedPlatformVariant") == "simulator"
+    for item in libraries
+), "XCFramework is missing the visionOS simulator slice"
+PY
 
 echo ""
 echo "==> Done."

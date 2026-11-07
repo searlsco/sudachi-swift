@@ -9,6 +9,7 @@ let package = Package(
     name: "sudachi-swift",
     platforms: [
         .iOS(.v17),
+        .visionOS(.v1),
         .macOS(.v14),
         .tvOS(.v17),
     ],

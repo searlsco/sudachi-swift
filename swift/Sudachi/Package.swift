@@ -7,6 +7,7 @@ let package = Package(
     name: "Sudachi",
     platforms: [
         .iOS(.v17),
+        .visionOS(.v1),
         .macOS(.v14),
         .tvOS(.v17),
     ],
