@@ -20,11 +20,12 @@ one of three layers:
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   source "$HOME/.cargo/env"
   rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin \
-    aarch64-apple-ios-macabi
+    aarch64-apple-ios-macabi aarch64-apple-visionos aarch64-apple-visionos-sim
   ```
 
   The xcframework is **Apple Silicon only** (arm64 device, arm64 simulator,
-  arm64 macOS, arm64 Mac Catalyst, arm64 tvOS device, arm64 tvOS simulator) —
+  arm64 macOS, arm64 Mac Catalyst, arm64 tvOS device and simulator, arm64
+  visionOS device and simulator) —
   the x86_64/Intel slices are intentionally dropped to roughly halve the
   artifact. tvOS is a tier-3 Rust target with no prebuilt std, so
   `scripts/build-ios.sh` builds those two slices with `-Zbuild-std` on the

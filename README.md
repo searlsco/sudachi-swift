@@ -5,7 +5,7 @@
 [![CI](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml/badge.svg)](https://github.com/searlsco/sudachi-swift/actions/workflows/ci.yml)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Swift 6](https://img.shields.io/badge/Swift-6-F05138?logo=swift&logoColor=white)](Package.swift)
-[![Platforms: iOS 17+ | visionOS 1+ | macOS 14+](https://img.shields.io/badge/Platforms-iOS_17%2B_|_visionOS_1%2B_|_macOS_14%2B-lightgrey)](Package.swift)
+[![Platforms: iOS 17+ | visionOS 1+ | macOS 14+ | tvOS 17+](https://img.shields.io/badge/Platforms-iOS_17%2B_|_visionOS_1%2B_|_macOS_14%2B_|_tvOS_17%2B-lightgrey)](Package.swift)
 
 Swift bindings for [Sudachi](https://github.com/WorksApplications/sudachi.rs) —
 the Japanese morphological analyzer from Works Applications — generated via
@@ -183,7 +183,7 @@ source):
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 source "$HOME/.cargo/env"
 rustup target add aarch64-apple-ios aarch64-apple-ios-sim aarch64-apple-darwin \
-  aarch64-apple-ios-macabi
+  aarch64-apple-ios-macabi aarch64-apple-visionos aarch64-apple-visionos-sim
 # (the tvOS slices are tier-3 Rust targets; build-ios.sh installs the nightly
 #  pinned as TVOS_NIGHTLY, with rust-src, and builds them with -Zbuild-std)
 
